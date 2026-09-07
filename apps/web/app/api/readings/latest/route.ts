@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { pool } from "@/lib/db";
+import { pool } from "@gluconimbus/db";
 import { newRequestId } from "@/lib/request-id";
 
 /** GET /api/readings/latest?participantId=001 */

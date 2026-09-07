@@ -1,0 +1,25 @@
+{
+  "name": "@gluconimbus/workers",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Long-running SQS consumer standing in for the ingestion Lambda (spec Section 6) — see docs/adr/0008-event-driven-pipeline.md.",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gluconimbus/cloud": "*",
+    "@gluconimbus/db": "*",
+    "@gluconimbus/types": "*",
+    "@gluconimbus/validation": "*",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

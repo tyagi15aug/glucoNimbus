@@ -19,6 +19,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "simulator": "npm run dev --workspace=@gluconimbus/simulator --",
+    "workers": "npm run dev --workspace=@gluconimbus/workers",
     "db:migrate": "npm run db:migrate --workspace=@gluconimbus/web",
     "db:seed": "npm run db:seed --workspace=@gluconimbus/web"
   },

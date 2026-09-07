@@ -9,8 +9,8 @@
 import "./load-env";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { Pool } from "pg";
 import type { MealEvent } from "@gluconimbus/types";
+import { createPool, upsertMealEvent } from "@gluconimbus/db";
 
 async function main(): Promise<void> {
   const participantId = process.argv[2] ?? "001";
@@ -21,30 +21,17 @@ async function main(): Promise<void> {
     return;
   }
 
-  const pool = new Pool({ connectionString: process.env["DATABASE_URL"] });
+  const pool = createPool();
   const lines = readFileSync(path, "utf-8").trim().split("\n").filter(Boolean);
   let count = 0;
 
   try {
     for (const line of lines) {
       const meal = JSON.parse(line) as MealEvent;
-      await pool.query(
-        `INSERT INTO meal_events (event_id, participant_id, "timestamp", description, carbs_grams, calories, source)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         ON CONFLICT (event_id) DO NOTHING`,
-        [
-          meal.eventId,
-          meal.participantId,
-          meal.timestamp,
-          meal.description ?? null,
-          meal.carbsGrams ?? null,
-          meal.calories ?? null,
-          meal.source,
-        ],
-      );
-      count++;
+      const { persisted } = await upsertMealEvent(meal, pool);
+      if (persisted) count++;
     }
-    console.log(`Seeded ${count} meal events for participant ${participantId}.`);
+    console.log(`Seeded ${count} new meal events for participant ${participantId} (existing ones skipped).`);
   } finally {
     await pool.end();
   }

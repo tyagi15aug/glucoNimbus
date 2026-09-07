@@ -4,7 +4,10 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
  * Points at LocalStack in every environment this project currently runs
  * in. `docs/adr/0004-why-localstack.md` covers why; a real AWS deployment
  * would just be a different set of env vars (Section 18's AWS/Azure
- * mapping documents the equivalent either way).
+ * mapping documents the equivalent either way). Moved here from
+ * `apps/web/lib/s3.ts` in Phase 3 so `apps/workers` — which does the
+ * actual archival now, not the API route — can use the same client
+ * without duplicating it (docs/adr/0008-event-driven-pipeline.md).
  */
 const s3Client = new S3Client({
   endpoint: process.env["AWS_ENDPOINT_URL"] ?? "http://localhost:4566",
@@ -21,12 +24,9 @@ const RAW_BUCKET = process.env["S3_RAW_BUCKET"] ?? "gluconimbus-raw";
 /**
  * Best-effort archival of the raw ingested payload, keyed by the same
  * eventId used for Postgres idempotency. Deliberately never throws — S3
- * being unreachable is not a reason to reject a reading that Postgres can
- * still persist; the caller just gets `archived: false` back to log.
- *
- * This is today's stand-in for the full event-driven pipeline (Section
- * 6): the historical/simulated data still touches S3 and gets a stable
- * key, even before SQS/Lambda land in Phase 3.
+ * being unreachable is not a reason to fail a message the worker can
+ * still persist to Postgres; the caller just gets `archived: false` back
+ * to log and record on the processing_events row.
  */
 export async function archiveRawEvent(participantId: string, eventId: string, payload: unknown): Promise<boolean> {
   try {

@@ -20,7 +20,7 @@ services:
     image: localstack/localstack:3.8
     container_name: gluconimbus-localstack
     environment:
-      SERVICES: s3
+      SERVICES: s3,sqs
       DEBUG: 0
       PERSISTENCE: 0
     ports:

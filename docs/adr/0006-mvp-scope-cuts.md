@@ -1,5 +1,7 @@
 # ADR 0006: What today's vertical slice deliberately does not include
 
+> **Status note:** the "SQS/Lambda pipeline (Phase 3)" item below is superseded — that pipeline is now built. See ADR 0008 for what shipped and why it's a worker process rather than a deployed Lambda. Left otherwise unedited as a record of the MVP's actual scope at the time; the rest of this ADR (auth, failure injection, CI/Terraform) is still accurate.
+
 ## Context
 
 Spec Section 25 defines "today's minimum viable milestone" as: research dataset → parser → canonical event → simulator → LocalStack S3 → simple ingestion API → PostgreSQL → Next.js chart. That's a much smaller surface than the full spec (auth, SQS/Lambda, failure injection, observability, CI, Terraform, a second dataset).

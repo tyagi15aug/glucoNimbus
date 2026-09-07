@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { AppErrorBody } from "@gluconimbus/types";
 import { ingestReadingsRequestSchema, normalizeIngestRequest } from "@gluconimbus/validation";
-import { ingestGlucoseEvent } from "@/lib/ingest";
-import { pool } from "@/lib/db";
+import { publishReadingBatch } from "@gluconimbus/cloud";
+import { pool } from "@gluconimbus/db";
 import { newRequestId } from "@/lib/request-id";
 
 /**
  * POST /api/readings — ingestion boundary the simulator (and later a real
- * sensor SDK) publishes to. Accepts one reading or a batch.
+ * sensor SDK) publishes to. Validates and publishes to the SQS ingest
+ * queue; `apps/workers` is what actually persists (docs/adr/0008). This
+ * route no longer touches Postgres or S3 directly — that's the whole
+ * point of decoupling producer from processor in Phase 3.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const requestId = newRequestId();
@@ -32,23 +35,28 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const events = normalizeIngestRequest(parsed.data);
-  const outcomes = await Promise.all(events.map(ingestGlucoseEvent));
 
-  const persisted = outcomes.filter((o) => o.persisted).length;
-  const duplicates = outcomes.length - persisted;
+  try {
+    await publishReadingBatch(events, requestId);
+  } catch (err) {
+    console.error(`[ingest] failed to publish to SQS:`, err);
+    return errorResponse("QUEUE_UNAVAILABLE", "Ingestion queue is unreachable.", requestId, true, 503);
+  }
 
   console.log(
     JSON.stringify({
       requestId,
-      operation: "IngestReadings",
-      count: outcomes.length,
-      persisted,
-      duplicates,
+      operation: "PublishReadings",
+      count: events.length,
       durationMs: Date.now() - start,
     }),
   );
 
-  return NextResponse.json({ requestId, received: outcomes.length, persisted, duplicates }, { status: 202 });
+  // 202: accepted for async processing. The old direct-write response's
+  // persisted/duplicate counts are gone on purpose — that outcome isn't
+  // known at publish time anymore. Poll GET /api/readings or
+  // /api/processing-events to see what the worker actually did with it.
+  return NextResponse.json({ requestId, received: events.length, status: "queued" }, { status: 202 });
 }
 
 /**

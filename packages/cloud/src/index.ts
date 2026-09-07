@@ -1,12 +1,12 @@
 /**
- * Placeholder for the provider-abstraction layer (docs/adr/0006-mvp-scope-cuts.md).
- *
- * Not built yet: `apps/web/lib/s3.ts` talks to LocalStack's S3 API
- * directly today, which is fine for a single provider and one bucket
- * operation. Once Phase 3 adds SQS/Lambda and a real AWS deployment
- * target becomes worth supporting, a `CloudProvider` interface belongs
- * here — mirroring the sibling CloudLab project's own
- * `LocalStackProvider`/`AWSProvider` split — so the application layer
- * stops importing `@aws-sdk/client-s3` directly.
+ * The provider-abstraction layer earmarked in ADR 0006 and built out in
+ * Phase 3 (ADR 0008): the application layer imports S3/SQS access from
+ * here instead of touching `@aws-sdk/client-*` directly. There's only
+ * ever been one provider (LocalStack) to swap under this, so it's a
+ * barrel of functions rather than a `CloudProvider` interface with
+ * multiple implementations — that abstraction is worth adding the day a
+ * second provider actually shows up, not before.
  */
-export {};
+export { archiveRawEvent } from "./s3";
+export { publishReadingBatch, receiveReadingMessages, deleteReadingMessage } from "./sqs";
+export type { QueuedReading, ReceivedMessage } from "./sqs";
