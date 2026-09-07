@@ -5,6 +5,7 @@
  * table with real data in it, at which point a real migration tool
  * earns its keep (see docs/adr/0007-plain-pg-over-prisma.md).
  */
+import "./load-env";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Pool } from "pg";

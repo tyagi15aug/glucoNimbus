@@ -13,6 +13,11 @@ A working vertical slice: research dataset → parser → canonical event → si
 ```bash
 npm install
 
+# Env vars. Next.js only auto-loads .env.local from apps/web/ itself (not
+# the repo root) — the db/simulator scripts below load it explicitly too
+# (apps/web/db/load-env.ts), but it still has to actually exist here.
+cp .env.example apps/web/.env.local
+
 # Postgres + LocalStack
 docker compose up -d
 

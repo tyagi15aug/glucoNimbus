@@ -6,6 +6,7 @@
  *
  * Usage: npm run db:seed --workspace=@glucostream/web -- 001
  */
+import "./load-env";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { Pool } from "pg";
