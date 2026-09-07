@@ -1,0 +1,29 @@
+{
+  "name": "glucostream",
+  "private": true,
+  "version": "0.1.0",
+  "description": "GlucoNimbus / GlucoStream — a CGM real-time data platform demonstrating event-driven cloud architecture over replayed, de-identified research data. Engineering demonstration only — not a medical device.",
+  "packageManager": "npm@10.9.7",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "data/scripts"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "simulator": "npm run dev --workspace=@glucostream/simulator --",
+    "db:migrate": "npm run db:migrate --workspace=@glucostream/web",
+    "db:seed": "npm run db:seed --workspace=@glucostream/web"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3"
+  }
+}

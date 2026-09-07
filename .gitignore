@@ -1,0 +1,22 @@
+node_modules/
+.turbo/
+dist/
+.next/
+out/
+.env
+.env.local
+*.log
+.DS_Store
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# Research dataset — fetched by data/scripts/download-dataset.sh, not committed.
+# (Open Data Commons Attribution license permits redistribution, but real
+# per-participant health data stays out of git as a matter of data
+# minimization, not a license requirement.)
+data/raw/
+data/normalized/
+
+.venv/

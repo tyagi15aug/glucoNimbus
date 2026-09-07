@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: glucostream-postgres
+    environment:
+      POSTGRES_USER: glucostream
+      POSTGRES_PASSWORD: glucostream
+      POSTGRES_DB: glucostream
+    ports:
+      - "5432:5432"
+    volumes:
+      - glucostream-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U glucostream"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  localstack:
+    image: localstack/localstack:3.8
+    container_name: glucostream-localstack
+    environment:
+      SERVICES: s3
+      DEBUG: 0
+      PERSISTENCE: 0
+    ports:
+      - "4566:4566"
+    volumes:
+      - glucostream-localstack-data:/var/lib/localstack
+      - ./infrastructure/localstack/init:/etc/localstack/init/ready.d
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+volumes:
+  glucostream-postgres-data:
+  glucostream-localstack-data:
