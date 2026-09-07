@@ -12,6 +12,7 @@
   "dependencies": {
     "@gluconimbus/cloud": "*",
     "@gluconimbus/db": "*",
+    "@gluconimbus/ingestion": "*",
     "@gluconimbus/types": "*",
     "@gluconimbus/validation": "*",
     "dotenv": "^16.4.7"

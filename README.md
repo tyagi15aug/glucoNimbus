@@ -55,12 +55,14 @@ Turborepo monorepo (ADR 0005 explains why this project uses one repo where the s
 apps/
   web/         Next.js dashboard + API routes (ingestion publish, readings, analytics, processing-events)
   workers/     SQS consumer — the actual persist step (docs/adr/0008)
+  workers-cf/  Cloudflare Queues consumer — public-deployment counterpart to apps/workers (ADR 0009, scaffolded, not yet deployed)
   simulator/   CGM replay engine / CLI
 packages/
   types/       Canonical event schema (TypeScript)
   validation/  Canonical event schema (zod, runtime)
   db/          Shared Postgres pool, idempotent upserts, schema.sql
   cloud/       S3 + SQS clients (the provider-abstraction layer, ADR 0006/0008)
+  ingestion/   Runtime-agnostic message processing, shared by apps/workers and apps/workers-cf (ADR 0009)
   analytics/   (placeholder — see package README)
   ui/          (placeholder — no cross-app components yet)
 data/
@@ -77,6 +79,7 @@ docker-compose.yml   Postgres + LocalStack (S3, SQS)
 ## Documentation
 
 - `docs/architecture/overview.md` — architecture diagram, phase status, AWS→Azure mapping
+- `docs/adr/0009-cloudflare-deployment.md` — the public-deployment plan: Hyperdrive, Cloudflare Queues, R2, and why the on-demand simulator needs Workflows. Scaffolded (`apps/workers-cf`), not yet deployed.
 - `docs/adr/` — decisions and why (dataset choice, canonical schema, idempotency, LocalStack, monorepo, MVP scope cuts, plain-pg-over-Prisma, the event-driven pipeline)
 - `data/README.md` — dataset details, license, Dexcom CSV quirks
 

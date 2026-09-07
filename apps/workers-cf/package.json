@@ -1,0 +1,22 @@
+{
+  "name": "@gluconimbus/workers-cf",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Queues consumer Worker — the public-deployment counterpart to apps/workers (Node/SQS). Same business logic (@gluconimbus/ingestion), different runtime adapters: Hyperdrive instead of a pg.Pool, an R2 binding instead of the S3 SDK. See docs/adr/0009-cloudflare-deployment.md.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@gluconimbus/db": "*",
+    "@gluconimbus/ingestion": "*",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250109.0",
+    "typescript": "^5.7.3",
+    "wrangler": "^4.29.0"
+  }
+}

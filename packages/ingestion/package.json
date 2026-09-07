@@ -1,0 +1,19 @@
+{
+  "name": "@gluconimbus/ingestion",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Runtime-agnostic message-processing logic shared by every Phase 3 consumer (apps/workers on Node/SQS, apps/workers-cf on Cloudflare Queues) — see docs/adr/0009-cloudflare-deployment.md.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gluconimbus/db": "*",
+    "@gluconimbus/types": "*",
+    "@gluconimbus/validation": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

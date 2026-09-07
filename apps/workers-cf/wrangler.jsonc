@@ -1,0 +1,36 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "gluconimbus-workers-cf",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-07",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // TODO(deploy): create a Hyperdrive config once a real external Postgres
+  // exists (Neon recommended, see docs/adr/0009-cloudflare-deployment.md):
+  //   npx wrangler hyperdrive create gluconimbus-db --connection-string="<postgres-url>"
+  // then replace the id below with what that command prints.
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "REPLACE_WITH_HYPERDRIVE_CONFIG_ID" }],
+
+  // TODO(deploy): R2 is not yet enabled on this Cloudflare account
+  // (Dashboard -> R2 -> Enable — the account-level toggle can't be done
+  // via API/MCP). Once enabled: npx wrangler r2 bucket create gluconimbus-raw
+  "r2_buckets": [{ "binding": "RAW_BUCKET", "bucket_name": "gluconimbus-raw" }],
+
+  // TODO(deploy): create both queues first — this consumer config assumes
+  // they exist, and dead_letter_queue does NOT auto-create the DLQ the way
+  // the main queue's config implies elsewhere:
+  //   npx wrangler queues create gluconimbus-ingest
+  //   npx wrangler queues create gluconimbus-ingest-dlq
+  "queues": {
+    "consumers": [
+      {
+        "queue": "gluconimbus-ingest",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "gluconimbus-ingest-dlq"
+      }
+    ]
+  }
+}
