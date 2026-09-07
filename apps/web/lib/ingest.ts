@@ -1,4 +1,4 @@
-import type { CanonicalGlucoseEventInput } from "@glucostream/validation";
+import type { CanonicalGlucoseEventInput } from "@gluconimbus/validation";
 import { pool } from "./db";
 import { archiveRawEvent } from "./s3";
 

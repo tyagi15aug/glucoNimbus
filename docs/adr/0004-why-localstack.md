@@ -6,7 +6,7 @@ The spec's core narrative is event-driven ingestion through AWS-shaped infrastru
 
 ## Decision
 
-Use LocalStack as the AWS emulator (`docker-compose.yml`), starting with just S3 for the MVP. The ingestion API archives every raw event to `s3://glucostream-raw/raw/<participantId>/<eventId>.json` (`apps/web/lib/s3.ts`) as a best-effort side effect alongside the Postgres write — S3 being unreachable never blocks ingestion, it just means that one event doesn't get archived (logged, not thrown).
+Use LocalStack as the AWS emulator (`docker-compose.yml`), starting with just S3 for the MVP. The ingestion API archives every raw event to `s3://gluconimbus-raw/raw/<participantId>/<eventId>.json` (`apps/web/lib/s3.ts`) as a best-effort side effect alongside the Postgres write — S3 being unreachable never blocks ingestion, it just means that one event doesn't get archived (logged, not thrown).
 
 SQS and Lambda are deliberately **not** stood up yet; Phase 1's ingestion is a direct API-route write. Phase 3 replaces the direct write with the full `API Gateway → Ingestion Lambda → SQS → Processing Lambda → Postgres` pipeline from spec Section 6, at which point the S3 archival step this ADR sets up now becomes the first stage of that pipeline rather than a side effect bolted onto a Next.js route handler.
 

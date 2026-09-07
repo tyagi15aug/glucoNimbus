@@ -14,8 +14,8 @@
 import { createReadStream, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { parse } from "csv-parse";
-import type { CanonicalGlucoseEvent } from "@glucostream/types";
-import { canonicalGlucoseEventSchema } from "@glucostream/validation";
+import type { CanonicalGlucoseEvent } from "@gluconimbus/types";
+import { canonicalGlucoseEventSchema } from "@gluconimbus/validation";
 import { deriveEventId } from "./canonical-id";
 
 const DATA_DIR = join(__dirname, "..", "..");

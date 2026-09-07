@@ -4,8 +4,8 @@
 # from the spec (Section 27), not a manual setup step.
 set -euo pipefail
 
-awslocal s3 mb s3://glucostream-raw
-awslocal s3 mb s3://glucostream-processed
-awslocal s3 mb s3://glucostream-exports
+awslocal s3 mb s3://gluconimbus-raw
+awslocal s3 mb s3://gluconimbus-processed
+awslocal s3 mb s3://gluconimbus-exports
 
-echo "GlucoStream S3 buckets ready."
+echo "GlucoNimbus S3 buckets ready."

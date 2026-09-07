@@ -1,5 +1,5 @@
 {
-  "name": "@glucostream/data-scripts",
+  "name": "@gluconimbus/data-scripts",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,8 +8,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@glucostream/types": "*",
-    "@glucostream/validation": "*",
+    "@gluconimbus/types": "*",
+    "@gluconimbus/validation": "*",
     "csv-parse": "^5.6.0",
     "uuid": "^11.0.5"
   },

@@ -1,5 +1,5 @@
 {
-  "name": "@glucostream/web",
+  "name": "@gluconimbus/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.716.0",
-    "@glucostream/types": "*",
-    "@glucostream/validation": "*",
+    "@gluconimbus/types": "*",
+    "@gluconimbus/validation": "*",
     "dotenv": "^16.4.7",
     "next": "^15.1.4",
     "pg": "^8.13.1",

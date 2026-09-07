@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ["@glucostream/types", "@glucostream/validation"],
+  transpilePackages: ["@gluconimbus/types", "@gluconimbus/validation"],
 };
 
 export default nextConfig;

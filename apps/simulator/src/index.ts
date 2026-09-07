@@ -12,7 +12,7 @@
  *   npm run simulator -- --participant=001 --speed=100x --duplicate-rate=0.05 --drop-rate=0.05
  */
 import { join } from "node:path";
-import type { CanonicalGlucoseEvent } from "@glucostream/types";
+import type { CanonicalGlucoseEvent } from "@gluconimbus/types";
 import { parseArgs, speedMultiplier } from "./args";
 import { loadHistoricalReadings } from "./replay";
 import { publishReading } from "./http-client";

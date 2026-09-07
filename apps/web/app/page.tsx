@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function HomePage(): React.ReactElement {
   return (
     <main className="page">
-      <h1>GlucoStream</h1>
+      <h1>GlucoNimbus</h1>
       <p style={{ color: "var(--color-text-muted)" }}>
         A CGM real-time data platform: replayed research CGM data flowing through an event-driven ingestion
         pipeline into a live dashboard.

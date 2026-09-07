@@ -1,4 +1,4 @@
-import type { CanonicalGlucoseEvent } from "@glucostream/types";
+import type { CanonicalGlucoseEvent } from "@gluconimbus/types";
 
 /**
  * Continues a glucose stream after the historical dataset runs out, per

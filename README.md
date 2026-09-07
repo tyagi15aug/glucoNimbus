@@ -1,4 +1,4 @@
-# GlucoStream (GlucoNimbus)
+# GlucoNimbus
 
 A CGM real-time data platform: de-identified research CGM data replayed through an event-driven ingestion pipeline into a live dashboard — a portfolio project demonstrating full-stack and cloud engineering, not a product.
 
@@ -22,16 +22,16 @@ cp .env.example apps/web/.env.local
 docker compose up -d
 
 # Schema
-npm run db:migrate --workspace=@glucostream/web
+npm run db:migrate --workspace=@gluconimbus/web
 
 # Get some real CGM data (open-access dataset, see data/README.md)
 ./data/scripts/download-dataset.sh 001
-npm run parse:dexcom --workspace=@glucostream/data-scripts -- 001
-npm run parse:food-log --workspace=@glucostream/data-scripts -- 001
-npm run db:seed --workspace=@glucostream/web -- 001
+npm run parse:dexcom --workspace=@gluconimbus/data-scripts -- 001
+npm run parse:food-log --workspace=@gluconimbus/data-scripts -- 001
+npm run db:seed --workspace=@gluconimbus/web -- 001
 
 # App
-npm run dev --workspace=@glucostream/web
+npm run dev --workspace=@gluconimbus/web
 # → http://localhost:3000/dashboard
 
 # In another terminal: replay the data through the real ingestion pipeline

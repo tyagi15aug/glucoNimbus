@@ -1,4 +1,4 @@
-import type { CanonicalGlucoseEvent } from "@glucostream/types";
+import type { CanonicalGlucoseEvent } from "@gluconimbus/types";
 
 export interface PublishResult {
   ok: boolean;

@@ -8,7 +8,7 @@
 import { createReadStream, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { parse } from "csv-parse";
-import type { MealEvent } from "@glucostream/types";
+import type { MealEvent } from "@gluconimbus/types";
 import { deriveEventId } from "./canonical-id";
 
 const DATA_DIR = join(__dirname, "..", "..");

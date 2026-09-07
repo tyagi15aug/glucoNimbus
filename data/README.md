@@ -39,9 +39,9 @@ The file is a Dexcom Clarity export, not a clean CSV of readings:
 ./data/scripts/download-dataset.sh 001 002 003
 
 # Parses data/raw/Dexcom_<id>.csv into normalized canonical events
-npm run parse:dexcom --workspace=@glucostream/data-scripts -- 001
+npm run parse:dexcom --workspace=@gluconimbus/data-scripts -- 001
 # → data/normalized/001/glucose.ndjson
 
-npm run parse:food-log --workspace=@glucostream/data-scripts -- 001
+npm run parse:food-log --workspace=@gluconimbus/data-scripts -- 001
 # → data/normalized/001/meals.ndjson
 ```

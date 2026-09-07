@@ -4,13 +4,13 @@
  * way glucose readings are (there's no "live food sensor" story to
  * rehearse), so seeding is the honest way to get them into the dashboard.
  *
- * Usage: npm run db:seed --workspace=@glucostream/web -- 001
+ * Usage: npm run db:seed --workspace=@gluconimbus/web -- 001
  */
 import "./load-env";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { Pool } from "pg";
-import type { MealEvent } from "@glucostream/types";
+import type { MealEvent } from "@gluconimbus/types";
 
 async function main(): Promise<void> {
   const participantId = process.argv[2] ?? "001";

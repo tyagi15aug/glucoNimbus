@@ -1,7 +1,7 @@
 import { createReadStream, existsSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { join } from "node:path";
-import type { CanonicalGlucoseEvent } from "@glucostream/types";
+import type { CanonicalGlucoseEvent } from "@gluconimbus/types";
 
 /** Reads a normalized glucose.ndjson file for one participant, in order (the parser already sorts it, but don't trust that blindly). */
 export async function loadHistoricalReadings(
@@ -13,7 +13,7 @@ export async function loadHistoricalReadings(
     throw new Error(
       `No normalized data for participant "${participantId}" at ${path}.\n` +
         `Run: ./data/scripts/download-dataset.sh ${participantId} && ` +
-        `npm run parse:dexcom --workspace=@glucostream/data-scripts -- ${participantId}`,
+        `npm run parse:dexcom --workspace=@gluconimbus/data-scripts -- ${participantId}`,
     );
   }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { AppErrorBody } from "@glucostream/types";
-import { ingestReadingsRequestSchema, normalizeIngestRequest } from "@glucostream/validation";
+import type { AppErrorBody } from "@gluconimbus/types";
+import { ingestReadingsRequestSchema, normalizeIngestRequest } from "@gluconimbus/validation";
 import { ingestGlucoseEvent } from "@/lib/ingest";
 import { pool } from "@/lib/db";
 import { newRequestId } from "@/lib/request-id";

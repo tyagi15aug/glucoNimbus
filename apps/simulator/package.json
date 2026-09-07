@@ -1,5 +1,5 @@
 {
-  "name": "@glucostream/simulator",
+  "name": "@gluconimbus/simulator",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,7 +8,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@glucostream/types": "*"
+    "@gluconimbus/types": "*"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

@@ -21,7 +21,7 @@ CGM Simulator (apps/simulator)   npm run db:seed (meals only)
         ▼
 POST /api/readings (apps/web)
         │
-        ├── best-effort archive ──────► LocalStack S3 (glucostream-raw)
+        ├── best-effort archive ──────► LocalStack S3 (gluconimbus-raw)
         │
         └── upsert(eventId) ──────────► Postgres: GlucoseReading
                                               │

@@ -1,4 +1,4 @@
--- GlucoStream schema. Plain SQL rather than an ORM migration DSL (see
+-- GlucoNimbus schema. Plain SQL rather than an ORM migration DSL (see
 -- docs/adr/0007-plain-pg-over-prisma.md) — `CREATE TABLE IF NOT EXISTS` is
 -- the whole "migration" for the MVP; a real migration tool is worth
 -- adopting the moment this needs to evolve a table with data already in

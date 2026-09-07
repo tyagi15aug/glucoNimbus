@@ -16,7 +16,7 @@ const s3Client = new S3Client({
   },
 });
 
-const RAW_BUCKET = process.env["S3_RAW_BUCKET"] ?? "glucostream-raw";
+const RAW_BUCKET = process.env["S3_RAW_BUCKET"] ?? "gluconimbus-raw";
 
 /**
  * Best-effort archival of the raw ingested payload, keyed by the same

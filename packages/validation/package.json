@@ -1,5 +1,5 @@
 {
-  "name": "@glucostream/validation",
+  "name": "@gluconimbus/validation",
   "version": "0.1.0",
   "private": true,
   "main": "./src/index.ts",
@@ -8,7 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@glucostream/types": "*",
+    "@gluconimbus/types": "*",
     "zod": "^3.24.1"
   },
   "devDependencies": {

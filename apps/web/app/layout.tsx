@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GlucoStream",
+  title: "GlucoNimbus",
   description: "CGM real-time data platform — engineering demonstration.",
 };
 

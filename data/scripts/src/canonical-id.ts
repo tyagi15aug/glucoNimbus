@@ -1,11 +1,11 @@
 import { v5 as uuidv5 } from "uuid";
 
 /**
- * Fixed namespace for GlucoStream-derived event IDs. Arbitrary but stable —
+ * Fixed namespace for GlucoNimbus-derived event IDs. Arbitrary but stable —
  * changing it would silently "duplicate" every previously-ingested reading
  * on the next replay, so it's a constant, not configuration.
  */
-const GLUCOSTREAM_NAMESPACE = "d3f1c1a0-6b1e-4c2a-9c3e-2f8f6a5b7d10";
+const GLUCONIMBUS_NAMESPACE = "d3f1c1a0-6b1e-4c2a-9c3e-2f8f6a5b7d10";
 
 /**
  * Deterministic eventId for a replayed reading. Same (deviceId,
@@ -15,5 +15,5 @@ const GLUCOSTREAM_NAMESPACE = "d3f1c1a0-6b1e-4c2a-9c3e-2f8f6a5b7d10";
  * docs/adr/0003-idempotency.md.
  */
 export function deriveEventId(deviceId: string, participantId: string, timestamp: string): string {
-  return uuidv5(`${deviceId}:${participantId}:${timestamp}`, GLUCOSTREAM_NAMESPACE);
+  return uuidv5(`${deviceId}:${participantId}:${timestamp}`, GLUCONIMBUS_NAMESPACE);
 }
