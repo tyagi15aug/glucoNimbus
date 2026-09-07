@@ -1,0 +1,106 @@
+# For a real VM (e.g. an Oracle Cloud Always Free instance), not Render.
+# Run with: docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+#
+# Unlike the Render deploy, this needs NO workaround Dockerfile for
+# LocalStack seeding (a real VM can bind-mount infrastructure/localstack/init
+# directly, same as docker-compose.yml already does for local dev) and NO
+# free-tier service-type restrictions: apps/workers runs full-time here for
+# $0, and LocalStack/Postgres are on the VM's own private Docker network,
+# not public.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gluconimbus-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gluconimbus
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set a real password in .env.prod}
+      POSTGRES_DB: gluconimbus
+    volumes:
+      - gluconimbus-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gluconimbus"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  localstack:
+    image: localstack/localstack:3.8
+    container_name: gluconimbus-localstack
+    restart: unless-stopped
+    environment:
+      SERVICES: s3,sqs
+      DEBUG: 0
+      PERSISTENCE: 1
+    volumes:
+      - gluconimbus-localstack-data:/var/lib/localstack
+      - ./infrastructure/localstack/init:/etc/localstack/init/ready.d
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: gluconimbus-web
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://gluconimbus:${POSTGRES_PASSWORD}@postgres:5432/gluconimbus
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - S3_RAW_BUCKET=gluconimbus-raw
+      - S3_PROCESSED_BUCKET=gluconimbus-processed
+      - SQS_QUEUE_NAME=gluconimbus-ingest
+      - SQS_DLQ_NAME=gluconimbus-ingest-dlq
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+
+  workers:
+    build:
+      context: .
+      dockerfile: apps/workers/Dockerfile
+    container_name: gluconimbus-workers
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://gluconimbus:${POSTGRES_PASSWORD}@postgres:5432/gluconimbus
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - S3_RAW_BUCKET=gluconimbus-raw
+      - SQS_QUEUE_NAME=gluconimbus-ingest
+      - SQS_DLQ_NAME=gluconimbus-ingest-dlq
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: gluconimbus-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+volumes:
+  gluconimbus-postgres-data:
+  gluconimbus-localstack-data:
+  caddy_data:
+  caddy_config:

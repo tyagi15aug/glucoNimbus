@@ -1,0 +1,6 @@
+# Replace :80 with your real domain (e.g. gluconimbus.yourname.dev) once
+# DNS points at this VM's IP -- Caddy then gets you free auto-renewing
+# HTTPS with no other changes. Until then this just serves plain HTTP.
+:80 {
+	reverse_proxy web:3000
+}
