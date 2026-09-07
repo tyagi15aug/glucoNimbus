@@ -1,0 +1,105 @@
+# Render Blueprint for GlucoNimbus. Deploy: Render Dashboard -> New ->
+# Blueprint -> point at this repo.
+#
+# MVP scope (per the "at least UI and API working" decision): apps/web
+# (dashboard + API routes) and LocalStack are deployed here. apps/workers
+# is deliberately NOT included yet — Render's Free instance type doesn't
+# support Background Worker services at all (confirmed against Render's
+# docs, not assumed; only web services, static sites, Postgres, and Key
+# Value are free). Running it means a paid Starter instance, ~$7/mo as of
+# this writing. Without it, POST /api/readings still queues messages
+# (SQS/LocalStack works), but nothing consumes them into Postgres — the
+# dashboard will only show whatever the DB migration/seed already put
+# there. See the commented-out block at the bottom to add it once you
+# decide whether to pay for it.
+#
+# Free-tier note: LocalStack runs as `type: web`, not `pserv` — Render's
+# Free instance type doesn't support private services either. It gets a
+# public URL as a side effect; acceptable since it holds no real
+# credentials, only fake AWS test resources.
+#
+# Cold starts on the free plan are expected and accepted (see the Master
+# Plan's hosting section / this project's Session 6) — nothing here tries
+# to engineer around them.
+databases:
+  - name: gluconimbus-db
+    plan: free
+    databaseName: gluconimbus
+    user: gluconimbus
+
+services:
+  - type: web
+    runtime: docker
+    name: gluconimbus-localstack
+    dockerfilePath: ./infrastructure/localstack/Dockerfile
+    plan: free
+    envVars:
+      - key: SERVICES
+        value: s3,sqs
+      - key: DEBUG
+        value: "0"
+      - key: PERSISTENCE
+        value: "0"
+      - key: PORT
+        value: "4566"
+
+  - type: web
+    runtime: node
+    name: gluconimbus-web
+    buildCommand: npm ci && npx turbo run build --filter=@gluconimbus/web... && npm run db:migrate --workspace=@gluconimbus/web
+    startCommand: npm run start --workspace=@gluconimbus/web
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gluconimbus-db
+          property: connectionString
+      # Render web services are reachable by their `name:` as an internal
+      # hostname over Render's private network, on the port they listen
+      # on (set above) — same pattern docker-compose's
+      # `http://localstack:4566` already used locally.
+      - key: AWS_ENDPOINT_URL
+        value: http://gluconimbus-localstack:4566
+      - key: AWS_REGION
+        value: us-east-1
+      - key: AWS_ACCESS_KEY_ID
+        value: test
+      - key: AWS_SECRET_ACCESS_KEY
+        value: test
+      - key: S3_RAW_BUCKET
+        value: gluconimbus-raw
+      - key: S3_PROCESSED_BUCKET
+        value: gluconimbus-processed
+      - key: SQS_QUEUE_NAME
+        value: gluconimbus-ingest
+      - key: SQS_DLQ_NAME
+        value: gluconimbus-ingest-dlq
+
+# Add this once you've decided to pay for a Starter instance (~$7/mo) so
+# readings actually get persisted end-to-end instead of just queuing:
+#
+#   - type: worker
+#     runtime: node
+#     name: gluconimbus-workers
+#     plan: starter
+#     buildCommand: npm ci
+#     startCommand: npm run start --workspace=@gluconimbus/workers
+#     envVars:
+#       - key: DATABASE_URL
+#         fromDatabase:
+#           name: gluconimbus-db
+#           property: connectionString
+#       - key: AWS_ENDPOINT_URL
+#         value: http://gluconimbus-localstack:4566
+#       - key: AWS_REGION
+#         value: us-east-1
+#       - key: AWS_ACCESS_KEY_ID
+#         value: test
+#       - key: AWS_SECRET_ACCESS_KEY
+#         value: test
+#       - key: S3_RAW_BUCKET
+#         value: gluconimbus-raw
+#       - key: SQS_QUEUE_NAME
+#         value: gluconimbus-ingest

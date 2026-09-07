@@ -1,5 +1,12 @@
 # ADR 0009: Cloudflare as the public deployment target
 
+> **Superseded by [ADR 0010](./0010-render-hosting.md).** Cloudflare Workers'
+> binding model (Hyperdrive, Queues, R2, Workflows) turned out to require real
+> architectural forks — a second worker implementation (`apps/workers-cf`), a
+> beta migration path for `apps/web` (vinext) — which is exactly what good
+> hosting shouldn't force. Kept below as an accurate record of that
+> evaluation, not as the current plan.
+
 ## Context
 
 `GlucoNimbus` runs today as Node processes against local Postgres/LocalStack (ADR 0004, ADR 0008). Anuj wants a public, low-cost, always-reachable demo of it — the uploaded deployment plan ("GlucoNimbus — Cloudflare Deployment & Architecture Plan") sets Cloudflare as the target while keeping LocalStack for local dev. This ADR records what that plan got right, what it glossed over, and the concrete choices made instead — verified against Cloudflare's live documentation and this account's actual state (via the Cloudflare Developer Platform MCP connector), not assumed from training knowledge that could be stale for a fast-moving platform.

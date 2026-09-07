@@ -79,10 +79,19 @@ docker-compose.yml   Postgres + LocalStack (S3, SQS)
 ## Documentation
 
 - `docs/architecture/overview.md` — architecture diagram, phase status, AWS→Azure mapping
-- `docs/adr/0009-cloudflare-deployment.md` — the public-deployment plan: Hyperdrive, Cloudflare Queues, R2, and why the on-demand simulator needs Workflows. Scaffolded (`apps/workers-cf`), not yet deployed.
+- `docs/adr/0010-render-hosting.md` — the current public-deployment plan (Render).
+- `docs/adr/0009-cloudflare-deployment.md` — **superseded by ADR-0010.** Kept as a record of the Cloudflare evaluation (`apps/workers-cf` is the leftover scaffold from it, no longer being built out).
 - `docs/adr/` — decisions and why (dataset choice, canonical schema, idempotency, LocalStack, monorepo, MVP scope cuts, plain-pg-over-Prisma, the event-driven pipeline)
 - `data/README.md` — dataset details, license, Dexcom CSV quirks
 
 ## Known limitations
 
 See `docs/adr/0006-mvp-scope-cuts.md` (as amended) and `docs/adr/0008-event-driven-pipeline.md` for the full picture. In short: no auth yet, no backend-side failure injection or developer control panel, no CI, only the worker's core logic has automated tests so far (no API-route or E2E tests yet), and the Empatica E4 wearable signals (accelerometry/BVP/EDA/HR/IBI/temp) aren't downloaded or used. The SQS wiring itself (queue/DLQ creation, actual send/receive against LocalStack) has not been run against real LocalStack as of this commit — see ADR 0008's verification section.
+
+## Deploying to Render
+
+`render.yaml` is a Render Blueprint covering the "UI + API working" MVP: `apps/web` (dashboard + API routes), LocalStack (S3 + SQS, seeded via `infrastructure/localstack/Dockerfile`), and a managed Postgres database. `apps/workers` is deliberately not included — see `docs/adr/0010-render-hosting.md` for why (short version: Render's free tier doesn't support Background Worker services at all, only web services/static sites/Postgres/Key Value; running the worker means a paid instance, left as your call).
+
+To deploy: Render Dashboard → New → Blueprint → point at this repo. The build step runs `db:migrate` automatically so the schema exists on first deploy.
+
+Without the worker, `POST /api/readings` queues successfully but nothing persists new readings — the dashboard shows whatever `db:migrate`/`db:seed` put there. Cold starts (up to ~1 minute after 15 minutes idle, on both `apps/web` and LocalStack) are expected on the free plan — see the Master Plan's hosting section and ADR 0010.
