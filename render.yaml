@@ -1,17 +1,19 @@
 # Render Blueprint for GlucoNimbus. Deploy: Render Dashboard -> New ->
 # Blueprint -> point at this repo.
 #
-# MVP scope (per the "at least UI and API working" decision): apps/web
-# (dashboard + API routes) and LocalStack are deployed here. apps/workers
-# is deliberately NOT included yet — Render's Free instance type doesn't
-# support Background Worker services at all (confirmed against Render's
-# docs, not assumed; only web services, static sites, Postgres, and Key
-# Value are free). Running it means a paid Starter instance, ~$7/mo as of
-# this writing. Without it, POST /api/readings still queues messages
-# (SQS/LocalStack works), but nothing consumes them into Postgres — the
-# dashboard will only show whatever the DB migration/seed already put
-# there. See the commented-out block at the bottom to add it once you
-# decide whether to pay for it.
+# apps/web (dashboard + API routes) and LocalStack are deployed here.
+# apps/workers is NOT deployed to Render at all — see
+# docs/adr/0011-scheduled-worker-for-hosting.md: Render's Free instance
+# type has no Background Worker option (only web services, static
+# sites, Postgres, and Key Value are free), and rather than pay for a
+# Starter instance (~$7/mo) to keep it always-on, it runs as a
+# scheduled Google Cloud Run Job instead — see infrastructure/gcp/README.md.
+#
+# Postgres is Neon, not Render's managed Postgres — Render's free
+# Postgres expires after 30 days, Neon's doesn't. DATABASE_URL below is
+# `sync: false`: set it once in the Render dashboard after creating a
+# Neon project (Neon connection strings aren't something Render can
+# provision for you the way `fromDatabase` did).
 #
 # Free-tier note: LocalStack runs as `type: web`, not `pserv` — Render's
 # Free instance type doesn't support private services either. It gets a
@@ -21,12 +23,6 @@
 # Cold starts on the free plan are expected and accepted (see the Master
 # Plan's hosting section / this project's Session 6) — nothing here tries
 # to engineer around them.
-databases:
-  - name: gluconimbus-db
-    plan: free
-    databaseName: gluconimbus
-    user: gluconimbus
-
 services:
   - type: web
     runtime: docker
@@ -53,9 +49,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: gluconimbus-db
-          property: connectionString
+        sync: false
       # Render web services are reachable by their `name:` as an internal
       # hostname over Render's private network, on the port they listen
       # on (set above) — same pattern docker-compose's
@@ -77,29 +71,9 @@ services:
       - key: SQS_DLQ_NAME
         value: gluconimbus-ingest-dlq
 
-# Add this once you've decided to pay for a Starter instance (~$7/mo) so
-# readings actually get persisted end-to-end instead of just queuing:
-#
-#   - type: worker
-#     runtime: node
-#     name: gluconimbus-workers
-#     plan: starter
-#     buildCommand: npm ci
-#     startCommand: npm run start --workspace=@gluconimbus/workers
-#     envVars:
-#       - key: DATABASE_URL
-#         fromDatabase:
-#           name: gluconimbus-db
-#           property: connectionString
-#       - key: AWS_ENDPOINT_URL
-#         value: http://gluconimbus-localstack:4566
-#       - key: AWS_REGION
-#         value: us-east-1
-#       - key: AWS_ACCESS_KEY_ID
-#         value: test
-#       - key: AWS_SECRET_ACCESS_KEY
-#         value: test
-#       - key: S3_RAW_BUCKET
-#         value: gluconimbus-raw
-#       - key: SQS_QUEUE_NAME
-#         value: gluconimbus-ingest
+# apps/workers deploys separately as a Google Cloud Run Job triggered by
+# Cloud Scheduler, not as a Render service — see
+# infrastructure/gcp/README.md for the full setup. It needs the same
+# DATABASE_URL (Neon) and AWS_* values as gluconimbus-web above, plus
+# AWS_ENDPOINT_URL pointing at gluconimbus-localstack's public Render URL
+# (Cloud Run can't reach Render's private network).

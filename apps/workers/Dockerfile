@@ -1,4 +1,10 @@
-# For a real VM (docker-compose.prod.yml), not Render.
+# Not used for local dev (there, `npm run dev` runs this natively —
+# see repo root README). This image is for deployed environments,
+# selected at runtime by the WORKER_MODE env var (see src/index.ts):
+# unset/"live" for docker-compose.prod.yml's always-on worker
+# (VM hosting, currently shelved — see docs/adr/0011); "once" as the
+# image for the hosted Cloud Run Job (infrastructure/gcp/README.md),
+# invoked on a schedule instead of staying resident.
 FROM node:20-alpine
 WORKDIR /repo
 
