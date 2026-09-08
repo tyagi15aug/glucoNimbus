@@ -32,6 +32,18 @@ gcloud artifacts repositories create gluconimbus \
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
   --role="roles/storage.objectViewer"
+
+# Same default-SA gap, two more spots: without these, step 1 builds the
+# image fine but then fails pushing it to Artifact Registry ("denied:
+# Permission 'artifactregistry.repositories.uploadArtifacts'"), and Cloud
+# Build separately warns it can't write build logs.
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
+  --role="roles/artifactregistry.writer"
+
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
+  --role="roles/logging.logWriter"
 ```
 
 **Set a budget alert now** (Billing → Budgets & alerts, $1 threshold is fine) — unlike Render/Oracle's
