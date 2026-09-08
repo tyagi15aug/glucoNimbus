@@ -42,7 +42,15 @@ services:
   - type: web
     runtime: node
     name: gluconimbus-web
-    buildCommand: npm ci && npx turbo run build --filter=@gluconimbus/web... && npm run db:migrate --workspace=@gluconimbus/web
+    # --include=dev overrides npm's default "skip devDependencies when
+    # NODE_ENV=production" behavior (NODE_ENV is set below, and Render
+    # applies service env vars during the build step too, not just at
+    # runtime). Without it, `typescript` never gets installed, Next.js
+    # silently drops the tsconfig `@/*` path-alias resolution, and every
+    # `@/...` import in apps/web fails with "Module not found" — confirmed
+    # live: this is exactly what broke the first real deploy. tsx (for
+    # db:migrate below) is a devDependency too, so it needs this as well.
+    buildCommand: npm ci --include=dev && npx turbo run build --filter=@gluconimbus/web... && npm run db:migrate --workspace=@gluconimbus/web
     startCommand: npm run start --workspace=@gluconimbus/web
     plan: free
     envVars:
