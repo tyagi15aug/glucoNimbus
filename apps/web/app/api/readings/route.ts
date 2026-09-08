@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import type { AppErrorBody } from "@gluconimbus/types";
 import { ingestReadingsRequestSchema, normalizeIngestRequest } from "@gluconimbus/validation";
 import { publishReadingBatch } from "@gluconimbus/cloud";
-import { pool } from "@gluconimbus/db";
+import { pool, listFailureRules } from "@gluconimbus/db";
 import { newRequestId } from "@/lib/request-id";
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /**
  * POST /api/readings — ingestion boundary the simulator (and later a real
@@ -35,6 +39,31 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const events = normalizeIngestRequest(parsed.data);
+
+  // Phase 6 reliability demonstration (spec Section 5) — same
+  // developer-toggled failure rules as the processing side
+  // (packages/ingestion), applied here at the ingestion boundary instead.
+  // `db_outage` rules are filtered out at the query level (via the scope
+  // arg) — this route never touches Postgres, so one couldn't fire here
+  // anyway (also enforced at creation time, see
+  // createFailureRuleRequestSchema). See docs/adr/0013-failure-injection.md.
+  for (const rule of await listFailureRules("ingestion")) {
+    if (Math.random() >= rule.probability) continue;
+
+    if (rule.failureType === "delay") {
+      if (rule.delayMs) await sleep(rule.delayMs);
+      continue;
+    }
+
+    console.error(`[ingest] injected failure (rule ${rule.id}): simulated ingestion error`);
+    return errorResponse(
+      "INJECTED_FAILURE",
+      `Simulated ingestion failure (developer panel rule ${rule.id}).`,
+      requestId,
+      true,
+      500,
+    );
+  }
 
   try {
     await publishReadingBatch(events, requestId);

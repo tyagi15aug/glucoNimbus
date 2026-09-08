@@ -12,10 +12,10 @@
  */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { config } from "dotenv";
 import { Pool } from "pg";
-import { applySchema } from "@gluconimbus/db";
+import { applySchema, createFailureRule, deleteFailureRule, type FailureRule } from "@gluconimbus/db";
 import type { CanonicalGlucoseEvent } from "@gluconimbus/types";
 import { processMessage } from "../src/process-message";
 
@@ -97,5 +97,100 @@ describe.skipIf(!DATABASE_URL)("processMessage", () => {
 
     expect(result.status).toBe("persisted");
     expect(pe.rows[0]?.archived).toBe(false);
+  });
+});
+
+/**
+ * Phase 6 (spec Section 5, docs/adr/0013-failure-injection.md) — real
+ * rows in `failure_rules`, same real-Postgres pattern as above. Each test
+ * creates the rule it needs and `afterEach` removes it, since a rule left
+ * behind would otherwise affect every subsequent test in this file (and
+ * in a shared local Postgres, other test files too).
+ */
+describe.skipIf(!DATABASE_URL)("processing-scope failure injection", () => {
+  const pool = new Pool({ connectionString: DATABASE_URL });
+  let createdRule: FailureRule | undefined;
+
+  beforeAll(async () => {
+    await applySchema(pool);
+  });
+
+  afterEach(async () => {
+    if (createdRule) {
+      await deleteFailureRule(createdRule.id, pool);
+      createdRule = undefined;
+    }
+  });
+
+  afterAll(async () => {
+    await pool.end();
+  });
+
+  function reading(overrides: Partial<CanonicalGlucoseEvent> = {}): CanonicalGlucoseEvent {
+    return {
+      eventId: `test-fi-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      deviceId: "test-device",
+      participantId: "test-participant",
+      timestamp: new Date().toISOString(),
+      glucose: 105,
+      unit: "mg/dL",
+      source: "synthetic",
+      ...overrides,
+    };
+  }
+
+  it("an active 'error' rule throws instead of persisting, and logs why", async () => {
+    createdRule = await createFailureRule({ scope: "processing", failureType: "error", probability: 1 }, pool);
+    const event = reading();
+
+    await expect(processMessage({ requestId: "req-fi-1", event }, pool)).rejects.toThrow(/Injected failure/);
+
+    const rows = await pool.query("SELECT id FROM glucose_readings WHERE event_id = $1", [event.eventId]);
+    expect(rows.rowCount).toBe(0);
+
+    const pe = await pool.query("SELECT status, error FROM processing_events WHERE request_id = $1", ["req-fi-1"]);
+    expect(pe.rows[0]?.status).toBe("failed");
+    expect(pe.rows[0]?.error).toMatch(/processor failure/);
+  });
+
+  it("a 'db_outage' rule fails the same way as 'error', with a distinct message", async () => {
+    createdRule = await createFailureRule({ scope: "processing", failureType: "db_outage", probability: 1 }, pool);
+    const event = reading();
+
+    await expect(processMessage({ requestId: "req-fi-2", event }, pool)).rejects.toThrow(/Injected failure/);
+
+    const pe = await pool.query("SELECT error FROM processing_events WHERE request_id = $1", ["req-fi-2"]);
+    expect(pe.rows[0]?.error).toMatch(/database unavailable/);
+  });
+
+  it("a 'delay' rule adds real latency but still persists", async () => {
+    createdRule = await createFailureRule(
+      { scope: "processing", failureType: "delay", delayMs: 150, probability: 1 },
+      pool,
+    );
+    const event = reading();
+
+    const start = Date.now();
+    const result = await processMessage({ requestId: "req-fi-3", event }, pool);
+    const elapsedMs = Date.now() - start;
+
+    expect(result.status).toBe("persisted");
+    expect(elapsedMs).toBeGreaterThanOrEqual(150);
+  });
+
+  it("probability 0 means the rule never fires", async () => {
+    createdRule = await createFailureRule({ scope: "processing", failureType: "error", probability: 0 }, pool);
+    const event = reading();
+
+    const result = await processMessage({ requestId: "req-fi-4", event }, pool);
+    expect(result.status).toBe("persisted");
+  });
+
+  it("an 'ingestion'-scope rule has no effect on processing", async () => {
+    createdRule = await createFailureRule({ scope: "ingestion", failureType: "error", probability: 1 }, pool);
+    const event = reading();
+
+    const result = await processMessage({ requestId: "req-fi-5", event }, pool);
+    expect(result.status).toBe("persisted");
   });
 });

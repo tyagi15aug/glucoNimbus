@@ -167,3 +167,13 @@ export {
   emailExists,
   type CreateUserInput,
 } from "./users";
+
+export {
+  listFailureRules,
+  createFailureRule,
+  deleteFailureRule,
+  type FailureScope,
+  type FailureType,
+  type FailureRule,
+  type CreateFailureRuleInput,
+} from "./failure-rules";

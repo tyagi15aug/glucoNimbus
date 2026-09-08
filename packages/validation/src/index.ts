@@ -58,3 +58,32 @@ export const loginRequestSchema = z.object({
   password: z.string().min(1).max(200),
 });
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
+
+/**
+ * Phase 6 failure injection (docs/adr/0013-failure-injection.md). Two
+ * cross-field rules beyond the per-field checks: `delay` needs a positive
+ * `delayMs` (an "error"/"db_outage" rule ignores it if present, but
+ * `delay` without it would silently do nothing); `db_outage` only means
+ * anything at `processing` scope — `POST /api/readings` never touches
+ * Postgres, so an ingestion-scope `db_outage` rule would just be dead
+ * config sitting in the table.
+ */
+export const failureScopeSchema = z.enum(["ingestion", "processing"]);
+export const failureTypeSchema = z.enum(["error", "delay", "db_outage"]);
+
+export const createFailureRuleRequestSchema = z
+  .object({
+    scope: failureScopeSchema,
+    failureType: failureTypeSchema,
+    delayMs: z.number().int().min(1).max(60_000).optional(),
+    probability: z.number().min(0).max(1).optional(),
+  })
+  .refine((data) => data.failureType !== "delay" || data.delayMs !== undefined, {
+    message: "delayMs is required (1-60000) when failureType is 'delay'.",
+    path: ["delayMs"],
+  })
+  .refine((data) => data.failureType !== "db_outage" || data.scope === "processing", {
+    message: "db_outage only applies at scope 'processing' — the ingestion route never touches Postgres.",
+    path: ["failureType"],
+  });
+export type CreateFailureRuleRequest = z.infer<typeof createFailureRuleRequestSchema>;
