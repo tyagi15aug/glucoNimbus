@@ -1,0 +1,16 @@
+# gcloud builds submit has no direct flag for "use a Dockerfile that isn't
+# named ./Dockerfile at the context root" (--tag's implicit build assumes
+# exactly that). apps/workers/Dockerfile needs the monorepo root as its
+# build context (it COPYs the whole repo to reach packages/db etc.), so
+# this explicit config points a docker-builder step at it instead.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - apps/workers/Dockerfile
+      - -t
+      - $_IMAGE
+      - .
+images:
+  - $_IMAGE

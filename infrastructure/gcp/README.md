@@ -29,18 +29,24 @@ more often or longer than expected.
 
 ## 1. Build and push the image
 
-From the repo root (the Dockerfile needs the monorepo context for the workspace deps):
+From the repo root (the Dockerfile needs the monorepo context for the workspace deps — it `COPY`s
+the whole repo to reach `packages/db`, `packages/cloud`, etc., not just `apps/workers`).
+
+`gcloud builds submit --tag ... --file ...` doesn't actually exist as a flag combination — `--tag`'s
+implicit build only looks for a `Dockerfile` at the literal root of the context, with no way to point
+it at `apps/workers/Dockerfile` instead. Use the small build config in this same folder instead,
+which does that explicitly:
 
 ```bash
 gcloud builds submit \
-  --tag us-central1-docker.pkg.dev/YOUR_PROJECT_ID/gluconimbus/workers:latest \
-  --file apps/workers/Dockerfile \
+  --config=infrastructure/gcp/cloudbuild.yaml \
+  --substitutions=_IMAGE=us-central1-docker.pkg.dev/YOUR_PROJECT_ID/gluconimbus/workers:latest \
   .
 ```
 
 (`gcloud builds submit` uses Cloud Build, itself covered by its own always-free monthly minutes for
-a job this small and infrequent — no local Docker required, though `docker build` + `docker push`
-works the same way if you'd rather build locally.)
+a job this small and infrequent — no local Docker required, though `docker build -f
+apps/workers/Dockerfile -t ... .` + `docker push` works the same way if you'd rather build locally.)
 
 ## 2. Create the Cloud Run Job
 
