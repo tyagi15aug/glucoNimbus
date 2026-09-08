@@ -65,6 +65,18 @@ export interface ActivityEvent {
 export type UserRole = "USER" | "DEVELOPER" | "ADMIN";
 
 /**
+ * The client-facing user shape — deliberately excludes `passwordHash`.
+ * Anywhere a user record crosses an API boundary, it's this type, never
+ * the raw `packages/db` row.
+ */
+export interface User {
+  id: string;
+  email: string;
+  role: UserRole;
+  createdAt: string;
+}
+
+/**
  * The application-facing error shape every API route returns on failure —
  * kept consistent so the frontend can make decisions off `retryable` rather
  * than parsing messages.

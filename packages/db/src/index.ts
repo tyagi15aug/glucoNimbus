@@ -159,3 +159,11 @@ export async function listRecentProcessingEvents(limit = 50, target: Pool = pool
 }
 
 export type { Pool } from "pg";
+
+export {
+  createUser,
+  findUserByEmailWithHash,
+  findUserById,
+  emailExists,
+  type CreateUserInput,
+} from "./users";

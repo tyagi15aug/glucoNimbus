@@ -6,7 +6,7 @@ A CGM real-time data platform: de-identified research CGM data replayed through 
 
 ## What's here right now
 
-A working event-driven pipeline: research dataset → parser → canonical event → simulator → ingestion API → **SQS** → worker → Postgres (+ best-effort S3 archival via LocalStack) → live dashboard chart. See `docs/architecture/overview.md` for the full diagram and an honest status table against the project's phase roadmap, and `docs/adr/0008-event-driven-pipeline.md` for what's actually verified vs. not. Auth, analytics beyond daily stats, a failure-injection control panel, CI, and Terraform are **not built yet**.
+A working event-driven pipeline: research dataset → parser → canonical event → simulator → ingestion API → **SQS** → worker → Postgres (+ best-effort S3 archival via LocalStack) → live dashboard chart, plus Credentials/JWT auth gating a `/developer` area. See `docs/architecture/overview.md` for the full diagram and an honest status table against the project's phase roadmap, and `docs/adr/0008-event-driven-pipeline.md` / `docs/adr/0012-auth.md` for what's actually verified vs. not. Analytics beyond daily stats, an actual failure-injection control panel (the auth gate for it exists; the panel itself doesn't yet), CI, and Terraform are **not built yet**.
 
 ## Quickstart
 
@@ -25,6 +25,12 @@ docker compose up -d
 
 # Schema (shared by apps/web and apps/workers — packages/db/src/schema.sql)
 npm run db:migrate --workspace=@gluconimbus/web
+
+# Optional: a seeded DEVELOPER-role account, since self-registration
+# (below) only ever creates USER-role accounts — see docs/adr/0012-auth.md.
+# Prints the generated login (demo@gluconimbus.dev / gluconimbus-demo-2026
+# unless overridden via DEMO_DEVELOPER_PASSWORD). Needed to reach /developer.
+npm run db:seed-demo-user --workspace=@gluconimbus/web
 
 # Get some real CGM data (open-access dataset, see data/README.md)
 ./data/scripts/download-dataset.sh 001
@@ -79,6 +85,7 @@ docker-compose.yml   Postgres + LocalStack (S3, SQS)
 ## Documentation
 
 - `docs/architecture/overview.md` — architecture diagram, phase status, AWS→Azure mapping
+- `docs/adr/0012-auth.md` — Phase 4 auth: Credentials + JWT sessions, the role model, what's protected and what isn't
 - `docs/adr/0010-render-hosting.md` — the current public-deployment plan (Render).
 - `docs/adr/0009-cloudflare-deployment.md` — **superseded by ADR-0010.** Kept as a record of the Cloudflare evaluation (`apps/workers-cf` is the leftover scaffold from it, no longer being built out).
 - `docs/adr/` — decisions and why (dataset choice, canonical schema, idempotency, LocalStack, monorepo, MVP scope cuts, plain-pg-over-Prisma, the event-driven pipeline)
@@ -86,7 +93,7 @@ docker-compose.yml   Postgres + LocalStack (S3, SQS)
 
 ## Known limitations
 
-See `docs/adr/0006-mvp-scope-cuts.md` (as amended) and `docs/adr/0008-event-driven-pipeline.md` for the full picture. In short: no auth yet, no backend-side failure injection or developer control panel, no CI, only the worker's core logic has automated tests so far (no API-route or E2E tests yet), and the Empatica E4 wearable signals (accelerometry/BVP/EDA/HR/IBI/temp) aren't downloaded or used. The SQS wiring itself (queue/DLQ creation, actual send/receive against LocalStack) has not been run against real LocalStack as of this commit — see ADR 0008's verification section.
+See `docs/adr/0006-mvp-scope-cuts.md` (as amended), `docs/adr/0008-event-driven-pipeline.md`, and `docs/adr/0012-auth.md` for the full picture. In short: no backend-side failure injection or developer control panel yet (the `/developer` auth gate exists, the panel behind it doesn't — Phase 6), no CI, no password reset/email verification/login rate limiting, worker/DB-layer logic has automated tests but no API-route or E2E tests yet, and the Empatica E4 wearable signals (accelerometry/BVP/EDA/HR/IBI/temp) aren't downloaded or used. The SQS wiring itself (queue/DLQ creation, actual send/receive against LocalStack) has not been run against real LocalStack as of this commit — see ADR 0008's verification section.
 
 ## Deploying to Render
 

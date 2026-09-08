@@ -56,7 +56,7 @@ CREATE INDEX IF NOT EXISTS processing_events_created_at_idx
   ON processing_events (created_at DESC);
 
 -- Phase 4: auth. JWT session strategy (no separate sessions table) — see
--- docs/adr/0010-auth.md for why Credentials over OAuth for this project.
+-- docs/adr/0012-auth.md for why Credentials over OAuth for this project.
 CREATE TABLE IF NOT EXISTS users (
   id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email          TEXT NOT NULL UNIQUE,

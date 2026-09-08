@@ -10,14 +10,17 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:migrate": "tsx db/migrate.ts",
-    "db:seed": "tsx db/seed.ts"
+    "db:seed": "tsx db/seed.ts",
+    "db:seed-demo-user": "tsx db/seed-demo-user.ts"
   },
   "dependencies": {
     "@gluconimbus/cloud": "*",
     "@gluconimbus/db": "*",
     "@gluconimbus/types": "*",
     "@gluconimbus/validation": "*",
+    "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.7",
+    "jose": "^5.9.6",
     "next": "^15.1.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -25,6 +28,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",

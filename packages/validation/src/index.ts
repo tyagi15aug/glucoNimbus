@@ -35,3 +35,26 @@ export function normalizeIngestRequest(
 ): CanonicalGlucoseEventInput[] {
   return Array.isArray(parsed) ? parsed : [parsed];
 }
+
+/**
+ * Phase 4 auth. `email` is lowercased+trimmed here (not just at the DB
+ * layer) so validation errors and the unique-constraint check agree on
+ * the same normalized value. Password floor is deliberately low (8 chars)
+ * — this is a portfolio demo, not a production account system; documented
+ * in docs/adr/0012-auth.md rather than silently over-engineered.
+ */
+export const registerRequestSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email(),
+  password: z.string().min(8).max(200),
+});
+export type RegisterRequest = z.infer<typeof registerRequestSchema>;
+
+export const loginRequestSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(1).max(200),
+});
+export type LoginRequest = z.infer<typeof loginRequestSchema>;
