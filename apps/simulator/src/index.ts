@@ -25,6 +25,21 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Shifts an event's displayed timestamp by a constant offset — the
+ * dataset's own dates (PhysioNet data is from ~2020) would otherwise flow
+ * straight into Postgres unchanged, and the dashboard's "Today" tiles
+ * (GET /api/analytics/daily, no explicit ?date=) filter on the server's
+ * real current date, so they'd stay empty even though ingestion is
+ * working correctly. `eventId` is untouched — it's derived at parse time
+ * from the *original* timestamp (data/scripts/canonical-id.ts), so this
+ * has no effect on idempotency: re-running the simulator against the
+ * same window still produces the same eventIds no matter what "now" is.
+ */
+function shiftTimestamp(event: CanonicalGlucoseEvent, offsetMs: number): CanonicalGlucoseEvent {
+  return { ...event, timestamp: new Date(new Date(event.timestamp).getTime() + offsetMs).toISOString() };
+}
+
 async function sendWithFailureInjection(
   apiUrl: string,
   event: CanonicalGlucoseEvent,
@@ -79,8 +94,12 @@ async function main(): Promise<void> {
     }
   };
 
+  const firstReading = historical[0];
+  if (!firstReading) return; // unreachable (checked historical.length above), satisfies noUncheckedIndexedAccess
+  const offsetMs = Date.now() - new Date(firstReading.timestamp).getTime();
+
   for (const event of historical) {
-    await emit(event);
+    await emit(shiftTimestamp(event, offsetMs));
     await sleep(HISTORICAL_INTERVAL_MS / multiplier);
   }
 
@@ -89,7 +108,7 @@ async function main(): Promise<void> {
   if (!lastReading) return; // unreachable (checked historical.length above), satisfies noUncheckedIndexedAccess
 
   for (const event of generateSyntheticReadings(deviceId, args.participant, lastReading, HISTORICAL_INTERVAL_MS)) {
-    await emit(event);
+    await emit(shiftTimestamp(event, offsetMs));
     await sleep(HISTORICAL_INTERVAL_MS / multiplier);
   }
 }
