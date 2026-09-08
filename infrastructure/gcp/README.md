@@ -21,6 +21,17 @@ gcloud services enable \
 gcloud artifacts repositories create gluconimbus \
   --repository-format=docker \
   --location=us-central1
+
+# New-project gotcha: Cloud Build runs as the default Compute Engine
+# service account (PROJECT_NUMBER-compute@developer.gserviceaccount.com),
+# which doesn't automatically get storage access to the bucket Cloud
+# Build auto-creates for uploaded source — without this, step 1's
+# `gcloud builds submit` fails with a 403 "storage.objects.get denied"
+# on that bucket. Find PROJECT_NUMBER with `gcloud projects describe
+# YOUR_PROJECT_ID --format='value(projectNumber)'` if you don't have it.
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
+  --role="roles/storage.objectViewer"
 ```
 
 **Set a budget alert now** (Billing → Budgets & alerts, $1 threshold is fine) — unlike Render/Oracle's
