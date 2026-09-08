@@ -50,12 +50,14 @@ services:
         value: production
       - key: DATABASE_URL
         sync: false
-      # Render web services are reachable by their `name:` as an internal
-      # hostname over Render's private network, on the port they listen
-      # on (set above) — same pattern docker-compose's
-      # `http://localstack:4566` already used locally.
+      # NOT the internal http://gluconimbus-localstack:4566 hostname —
+      # confirmed against CloudLab's real deploy that Render's Free
+      # instances can send private-network requests but can't receive
+      # them, so gluconimbus-localstack (also Free) is unreachable that
+      # way regardless of its own health. Its public HTTPS URL works
+      # fine — ordinary internet traffic, not Render's private network.
       - key: AWS_ENDPOINT_URL
-        value: http://gluconimbus-localstack:4566
+        value: https://gluconimbus-localstack.onrender.com
       - key: AWS_REGION
         value: us-east-1
       - key: AWS_ACCESS_KEY_ID
