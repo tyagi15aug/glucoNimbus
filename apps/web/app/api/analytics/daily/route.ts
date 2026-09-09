@@ -1,30 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { pool, type Pool } from "@gluconimbus/db";
+import { summarizeGlucose, type GlucoseSummary } from "@gluconimbus/analytics";
 import { newRequestId } from "@/lib/request-id";
 
-interface DailyRow {
-  count: number;
-  average: string | null;
-  min: string | null;
-  max: string | null;
-  stddev: string | null;
-}
-
-async function queryDay(target: Pool, participantId: string, day: string): Promise<DailyRow | undefined> {
+async function queryDay(target: Pool, participantId: string, day: string): Promise<GlucoseSummary> {
   const result = await target.query(
-    `SELECT
-       count(*)::int AS count,
-       avg(glucose) AS average,
-       min(glucose) AS min,
-       max(glucose) AS max,
-       stddev_pop(glucose) AS stddev
-     FROM glucose_readings
+    `SELECT glucose FROM glucose_readings
      WHERE participant_id = $1
        AND "timestamp" >= $2::date
        AND "timestamp" < ($2::date + interval '1 day')`,
     [participantId, day],
   );
-  return result.rows[0] as DailyRow | undefined;
+  return summarizeGlucose(result.rows.map((row) => Number(row.glucose)));
 }
 
 /**
@@ -49,19 +36,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // time; a short run of raw historical data can still be behind it). An
   // explicit `?date=` (e.g. for debugging against known historical data)
   // is honored exactly as asked and never overridden.
-  if ((!row || row.count === 0) && !dateParam) {
+  if (row.count === 0 && !dateParam) {
     const latest = await pool.query(
       `SELECT max("timestamp")::date AS day FROM glucose_readings WHERE participant_id = $1`,
       [participantId],
     );
-    const latestDay = latest.rows[0]?.day as Date | null | undefined;
+    const latestDay = latest.rows[0]?.day as string | Date | null | undefined;
     if (latestDay) {
-      day = latestDay.toISOString().slice(0, 10);
+      day = typeof latestDay === "string" ? latestDay.slice(0, 10) : latestDay.toISOString().slice(0, 10);
       row = await queryDay(pool, participantId, day);
     }
   }
 
-  if (!row || row.count === 0) {
+  if (row.count === 0) {
     return NextResponse.json({
       requestId,
       participantId,
@@ -79,9 +66,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     participantId,
     date: day,
     count: row.count,
-    average: row.average === null ? null : Number(Number(row.average).toFixed(1)),
-    min: row.min === null ? null : Number(row.min),
-    max: row.max === null ? null : Number(row.max),
-    standardDeviation: row.stddev === null ? null : Number(Number(row.stddev).toFixed(1)),
+    average: row.average,
+    min: row.min,
+    max: row.max,
+    standardDeviation: row.standardDeviation,
+    coefficientOfVariation: row.coefficientOfVariation,
   });
 }

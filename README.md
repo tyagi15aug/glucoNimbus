@@ -6,7 +6,7 @@ A CGM real-time data platform: de-identified research CGM data replayed through 
 
 ## What's here right now
 
-A working event-driven pipeline: research dataset → parser → canonical event → simulator → ingestion API → **SQS** → worker → Postgres (+ best-effort S3 archival via LocalStack) → live dashboard chart, plus Credentials/JWT auth gating a `/developer` area with a live failure-injection control panel, a Playwright + vitest test suite, and GitHub Actions CI on every push/PR. See `docs/architecture/overview.md` for the full diagram and an honest status table against the project's phase roadmap, and `docs/adr/0008-event-driven-pipeline.md` / `docs/adr/0012-auth.md` / `docs/adr/0013-failure-injection.md` / `docs/adr/0014-ci-cd.md` for what's actually verified vs. not. Analytics beyond daily stats, and real Terraform for the GCP hosting side (ADR 0014's "IaC" section explains why), are **not built yet**.
+A working event-driven pipeline: research dataset → parser → canonical event → simulator → ingestion API → **SQS** → worker → Postgres (+ best-effort S3 archival via LocalStack) → live dashboard chart, plus Credentials/JWT auth gating a `/developer` area with a live failure-injection control panel, a Playwright + vitest test suite, and GitHub Actions CI on every push/PR. The dashboard includes daily descriptive statistics, a seven-day historical comparison, meal context, and live infrastructure readiness. See `docs/architecture/overview.md` for the full diagram and an honest status table against the project's phase roadmap, and `docs/adr/0008-event-driven-pipeline.md` / `docs/adr/0012-auth.md` / `docs/adr/0013-failure-injection.md` / `docs/adr/0014-ci-cd.md` for what's actually verified vs. not. Activity/heart-rate correlation and real Terraform for the GCP hosting side (ADR 0014's "IaC" section explains why) are **not built yet**.
 
 ## Quickstart
 
@@ -69,7 +69,7 @@ packages/
   db/          Shared Postgres pool, idempotent upserts, schema.sql
   cloud/       S3 + SQS clients (the provider-abstraction layer, ADR 0006/0008)
   ingestion/   Runtime-agnostic message processing, shared by apps/workers and apps/workers-cf (ADR 0009)
-  analytics/   (placeholder — see package README)
+  analytics/   Shared deterministic glucose-statistics calculations
   ui/          (placeholder — no cross-app components yet)
 data/
   scripts/     Dataset download + parse-to-canonical-event scripts

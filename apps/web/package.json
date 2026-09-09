@@ -15,6 +15,7 @@
     "db:seed-demo-user": "tsx db/seed-demo-user.ts"
   },
   "dependencies": {
+    "@gluconimbus/analytics": "*",
     "@gluconimbus/cloud": "*",
     "@gluconimbus/db": "*",
     "@gluconimbus/types": "*",
