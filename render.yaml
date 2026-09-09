@@ -58,6 +58,16 @@ services:
         value: production
       - key: DATABASE_URL
         sync: false
+      # `sync: false` here for the same reason as DATABASE_URL — a
+      # random secret isn't something the Blueprint can generate and
+      # commit safely, it has to be set once by hand in the dashboard
+      # (`openssl rand -base64 32`). Phase 4 (docs/adr/0012-auth.md)
+      # added this to .env.example but missed adding it here, which
+      # meant the live deploy's auth routes threw "AUTH_SECRET is not
+      # set" (lib/jwt.ts throws loudly by design rather than signing
+      # with `undefined`) until caught and fixed post-deploy.
+      - key: AUTH_SECRET
+        sync: false
       # NOT the internal http://gluconimbus-localstack:4566 hostname —
       # confirmed against CloudLab's real deploy that Render's Free
       # instances can send private-network requests but can't receive
