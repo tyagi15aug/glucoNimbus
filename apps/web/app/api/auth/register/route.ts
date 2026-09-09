@@ -36,21 +36,33 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
   const { email, password } = parsed.data;
 
-  if (await emailExists(email)) {
-    return errorResponse("EMAIL_TAKEN", "An account with this email already exists.", requestId, false, 409);
+  // Everything past this point (DB write, jwt signing) can throw for
+  // reasons that have nothing to do with the request body — a missing
+  // AUTH_SECRET (lib/jwt.ts throws loudly by design rather than signing
+  // with `undefined`) chief among them. Without this catch, an uncaught
+  // throw here becomes Next's default HTML error page instead of JSON,
+  // which the client can't parse — AuthForm.tsx's fetch then reports a
+  // misleading "network error" for what's actually a real server bug.
+  try {
+    if (await emailExists(email)) {
+      return errorResponse("EMAIL_TAKEN", "An account with this email already exists.", requestId, false, 409);
+    }
+
+    const passwordHash = await hashPassword(password);
+    const user = await createUser({ email, passwordHash, role: "USER" });
+    const token = await signSession(user);
+
+    const response = NextResponse.json({ requestId, user }, { status: 201 });
+    response.cookies.set(SESSION_COOKIE, token, {
+      httpOnly: true,
+      secure: process.env["NODE_ENV"] === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_TTL_SECONDS,
+    });
+    return response;
+  } catch (err) {
+    console.error(`[auth/register] ${requestId}:`, err);
+    return errorResponse("INTERNAL_ERROR", "Registration failed unexpectedly.", requestId, true, 500);
   }
-
-  const passwordHash = await hashPassword(password);
-  const user = await createUser({ email, passwordHash, role: "USER" });
-  const token = await signSession(user);
-
-  const response = NextResponse.json({ requestId, user }, { status: 201 });
-  response.cookies.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env["NODE_ENV"] === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_TTL_SECONDS,
-  });
-  return response;
 }

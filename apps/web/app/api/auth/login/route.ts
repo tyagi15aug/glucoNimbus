@@ -35,23 +35,33 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
   const { email, password } = parsed.data;
 
-  const found = await findUserByEmailWithHash(email);
-  if (!found || !(await verifyPassword(password, found.passwordHash))) {
-    return errorResponse("INVALID_CREDENTIALS", "Incorrect email or password.", requestId, false, 401);
-  }
-  // Built explicitly (not a `...rest` destructure) so `passwordHash` never
-  // even briefly exists on a variable that gets serialized into the
-  // response — one less thing to get wrong later if this route changes.
-  const user: User = { id: found.id, email: found.email, role: found.role, createdAt: found.createdAt };
+  // See register/route.ts's matching comment: everything past this point
+  // can throw for reasons unrelated to the submitted credentials (a
+  // missing AUTH_SECRET, primarily) — catch it here so the client gets a
+  // real JSON error instead of Next's HTML error page.
+  try {
+    const found = await findUserByEmailWithHash(email);
+    if (!found || !(await verifyPassword(password, found.passwordHash))) {
+      return errorResponse("INVALID_CREDENTIALS", "Incorrect email or password.", requestId, false, 401);
+    }
+    // Built explicitly (not a `...rest` destructure) so `passwordHash`
+    // never even briefly exists on a variable that gets serialized into
+    // the response — one less thing to get wrong later if this route
+    // changes.
+    const user: User = { id: found.id, email: found.email, role: found.role, createdAt: found.createdAt };
 
-  const token = await signSession(user);
-  const response = NextResponse.json({ requestId, user }, { status: 200 });
-  response.cookies.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env["NODE_ENV"] === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_TTL_SECONDS,
-  });
-  return response;
+    const token = await signSession(user);
+    const response = NextResponse.json({ requestId, user }, { status: 200 });
+    response.cookies.set(SESSION_COOKIE, token, {
+      httpOnly: true,
+      secure: process.env["NODE_ENV"] === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_TTL_SECONDS,
+    });
+    return response;
+  } catch (err) {
+    console.error(`[auth/login] ${requestId}:`, err);
+    return errorResponse("INTERNAL_ERROR", "Login failed unexpectedly.", requestId, true, 500);
+  }
 }

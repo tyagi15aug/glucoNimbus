@@ -24,21 +24,45 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps): React.ReactElemen
     e.preventDefault();
     setError(null);
     setSubmitting(true);
+
+    // Split into two try/catches on purpose: a thrown fetch() (DNS
+    // failure, connection refused, CORS) is a genuine network error, but
+    // a thrown res.json() or a thrown router.push()/router.refresh() is
+    // not — lumping all three into one catch previously reported every
+    // one of them as "network error", which was actively misleading
+    // while chasing a real server-side bug (a route throwing before
+    // returning JSON, surfaced as Next's HTML error page here).
+    let res: Response;
     try {
-      const res = await fetch(`/api/auth/${mode}`, {
+      res = await fetch(`/api/auth/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      if (!res.ok) {
-        const body = (await res.json()) as AuthErrorBody;
-        setError(body.error?.message ?? "Something went wrong.");
-        return;
-      }
-      router.push(redirectTo ?? "/dashboard");
-      router.refresh();
     } catch {
       setError("Network error — is the server reachable?");
+      setSubmitting(false);
+      return;
+    }
+
+    if (!res.ok) {
+      try {
+        const body = (await res.json()) as AuthErrorBody;
+        setError(body.error?.message ?? "Something went wrong.");
+      } catch {
+        // Response wasn't JSON at all — most likely an unhandled
+        // exception in the route handler rendered as an HTML error page.
+        // Surfacing the real status code here (instead of "network
+        // error") is what makes that diagnosable from the browser alone.
+        setError(`Server error (${res.status}) — check the server logs for details.`);
+      }
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      router.push(redirectTo ?? "/dashboard");
+      router.refresh();
     } finally {
       setSubmitting(false);
     }
