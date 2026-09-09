@@ -32,7 +32,10 @@ export default defineConfig({
   fullyParallel: false, // shared Postgres + shared failure_rules state (ADR 0013's "shared, global control") — serial keeps this predictable; not a performance concern at this suite's size
   forbidOnly: !!process.env["CI"],
   retries: process.env["CI"] ? 1 : 0,
-  reporter: "line",
+  // Locally, "line" is enough. In CI (GitHub Actions sets CI automatically),
+  // also emit the HTML report so the workflow has something to upload as an
+  // artifact — see .github/workflows/ci.yml and docs/adr/0014-ci-cd.md.
+  reporter: process.env["CI"] ? [["line"], ["html", { open: "never" }]] : "line",
   globalSetup: "./e2e/global-setup.ts",
   use: {
     baseURL: BASE_URL,

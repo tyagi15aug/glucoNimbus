@@ -12,6 +12,7 @@ coverage/
 playwright-report/
 test-results/
 *.tsbuildinfo
+ci-artifacts/
 
 # Research dataset — fetched by data/scripts/download-dataset.sh, not committed.
 # (Open Data Commons Attribution license permits redistribution, but real
