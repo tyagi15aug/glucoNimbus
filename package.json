@@ -18,6 +18,7 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:e2e": "npm run test:e2e --workspace=@gluconimbus/web",
     "simulator": "npm run dev --workspace=@gluconimbus/simulator --",
     "workers": "npm run dev --workspace=@gluconimbus/workers",
     "db:migrate": "npm run db:migrate --workspace=@gluconimbus/web",
