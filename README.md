@@ -93,7 +93,12 @@ docker-compose.yml   Postgres + LocalStack (S3, SQS)
 
 ## Known limitations
 
-See `docs/adr/0006-mvp-scope-cuts.md` (as amended), `docs/adr/0008-event-driven-pipeline.md`, and `docs/adr/0012-auth.md` for the full picture. In short: no backend-side failure injection or developer control panel yet (the `/developer` auth gate exists, the panel behind it doesn't — Phase 6), no CI, no password reset/email verification/login rate limiting, worker/DB-layer logic has automated tests but no API-route or E2E tests yet, and the Empatica E4 wearable signals (accelerometry/BVP/EDA/HR/IBI/temp) aren't downloaded or used. The SQS wiring itself (queue/DLQ creation, actual send/receive against LocalStack) has not been run against real LocalStack as of this commit — see ADR 0008's verification section.
+See `docs/adr/0006-mvp-scope-cuts.md` (as amended), `docs/adr/0008-event-driven-pipeline.md`, `docs/adr/0012-auth.md`, and `docs/adr/0013-failure-injection.md` for the full picture. In short: no CI yet (Phase 9), no password reset/email verification/login rate limiting, and the Empatica E4 wearable signals (accelerometry/BVP/EDA/HR/IBI/temp) aren't downloaded or used. The SQS wiring itself (queue/DLQ creation, actual send/receive against LocalStack) has not been run against real LocalStack as of this commit — see ADR 0008's verification section.
+
+## Testing
+
+- `npm test` (or `npm run test --workspace=@gluconimbus/web` / `--workspace=@gluconimbus/workers`) — vitest, unit/integration tests against a real local Postgres (`npm run db:migrate` first). Skips automatically, not failing, if `DATABASE_URL` isn't set.
+- `npm run test:e2e` — Playwright, HTTP-level API integration tests plus real-browser E2E (`apps/web/e2e/`). Builds and runs a production `next start` on port 3100 rather than `next dev` — see `apps/web/playwright.config.ts`'s comment for why. Needs local Postgres + `apps/web/.env.local` (same as above); LocalStack/SQS being unreachable is fine, several tests specifically assert that degraded path (`503 QUEUE_UNAVAILABLE`).
 
 ## Deploying to Render
 
