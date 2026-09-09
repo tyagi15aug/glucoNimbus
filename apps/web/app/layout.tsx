@@ -21,6 +21,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </Link>
           <nav className="site-nav">
             <Link href="/dashboard">Dashboard</Link>
+            <Link href="/architecture">Architecture</Link>
             {session ? (
               <>
                 {(session.role === "DEVELOPER" || session.role === "ADMIN") && (

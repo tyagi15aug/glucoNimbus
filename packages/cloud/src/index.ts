@@ -8,5 +8,5 @@
  * second provider actually shows up, not before.
  */
 export { archiveRawEvent } from "./s3";
-export { publishReadingBatch, receiveReadingMessages, deleteReadingMessage } from "./sqs";
-export type { QueuedReading, ReceivedMessage } from "./sqs";
+export { publishReadingBatch, receiveReadingMessages, deleteReadingMessage, getIngestQueueDepth } from "./sqs";
+export type { QueuedReading, ReceivedMessage, QueueDepth } from "./sqs";

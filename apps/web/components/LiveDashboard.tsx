@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { GlucoseChart, type ChartPoint } from "./GlucoseChart";
+import { PipelineExplorer } from "./PipelineExplorer";
 
 interface LatestResponse {
   reading: { glucose: number; unit: string; timestamp: string } | null;
@@ -137,6 +138,8 @@ export function LiveDashboard({ participantId }: { participantId: string }): Rea
         </p>
         <GlucoseChart points={history} />
       </div>
+
+      <PipelineExplorer />
 
       <div className="dashboard-detail-grid">
         <section className="chart-panel">

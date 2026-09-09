@@ -1,5 +1,6 @@
 import {
   DeleteMessageCommand,
+  GetQueueAttributesCommand,
   ReceiveMessageCommand,
   SendMessageCommand,
   SQSClient,
@@ -87,4 +88,31 @@ export async function receiveReadingMessages(maxMessages = 10, waitTimeSeconds =
 
 export async function deleteReadingMessage(receiptHandle: string): Promise<void> {
   await sqsClient.send(new DeleteMessageCommand({ QueueUrl: queueUrl(QUEUE_NAME), ReceiptHandle: receiptHandle }));
+}
+
+/** A lightweight operational snapshot for the architecture/demo view. */
+export interface QueueDepth {
+  visible: number;
+  inFlight: number;
+  delayed: number;
+}
+
+export async function getIngestQueueDepth(): Promise<QueueDepth> {
+  const result = await sqsClient.send(
+    new GetQueueAttributesCommand({
+      QueueUrl: queueUrl(QUEUE_NAME),
+      AttributeNames: [
+        "ApproximateNumberOfMessages",
+        "ApproximateNumberOfMessagesNotVisible",
+        "ApproximateNumberOfMessagesDelayed",
+      ],
+    }),
+    { abortSignal: AbortSignal.timeout(3000) },
+  );
+  const attributes = result.Attributes ?? {};
+  return {
+    visible: Number(attributes["ApproximateNumberOfMessages"] ?? 0),
+    inFlight: Number(attributes["ApproximateNumberOfMessagesNotVisible"] ?? 0),
+    delayed: Number(attributes["ApproximateNumberOfMessagesDelayed"] ?? 0),
+  };
 }

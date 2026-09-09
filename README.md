@@ -84,6 +84,8 @@ docker-compose.yml   Postgres + LocalStack (S3, SQS)
 
 ## Documentation
 
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — end-to-end reading lifecycle, component responsibilities, and failure behavior.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — local workflow, verification commands, and contribution safeguards.
 - `docs/architecture/overview.md` — architecture diagram, phase status, AWS→Azure mapping
 - `docs/adr/0012-auth.md` — Phase 4 auth: Credentials + JWT sessions, the role model, what's protected and what isn't
 - `docs/adr/0010-render-hosting.md` — the current public-deployment plan (Render).
